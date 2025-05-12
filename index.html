@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Love Fireworks for My Crush</title>
+    <style> @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Open+Sans&display=swap');
+
+        /* Reset */
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background: #2b0216;
+            font-family: 'Open Sans', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #container {
+            max-width: 350px;
+            max-height: 600px;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: radial-gradient(circle at center, #43032a 0%, #2b0216 90%);
+            overflow: hidden;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            user-select: none;
+            text-align: center;
+        }
+
+        h1{
+            font-family: 'Great Vibes', cursive;
+            font-size: 3.8rem;
+            color: #ff5f87;
+            text-shadow: 0 0 20px #ff5f87aa, 0 0 40px #ff2d55aa;
+            margin-bottom: 15px;
+            line-height: 1.1;
+        }
+
+        p{
+            font-size: 1.25rem;
+            color: #f4c1bb;
+            text-shadow: 0 0 8px #bd6b75cc;
+            margin-bottom: 40px;
+            max-width: 90%;
+        }
+
+        canvas{
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #instruction {
+            color: #ffadc6cc;
+            font-size: 1rem;
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-style: italic;
+            user-select: none;
+            z-index: 20;
+        }
+    </style>
+</head>
+<body>
+    <div id="container" aria-label="Love fireworks with a message">
+        <h1>To My Beloved Crush</h1>
+        <p>If your mom or dad ever told you they want the best for you, they were talking about me</p>
+        <div id="instruction">Tap or click anywhere to create fireworks!</div>
+        <canvas id="fireworks"></canvas>
+    </div>
+
+    <script>
+        (() => {
+            const canvas = document.getElementById('fireworks');
+            const ctx = canvas.getContext('2d');
+            let cw, ch;
+
+            function resize() {
+                cw = canvas.width = canvas.clientWidth;
+                ch = canvas.height = canvas.clientHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize;
+
+            class Particle {
+                constructor(x, y, color) {
+                    this.x = x;
+                    this.y = y;
+                    this.color = color;
+                    this.radius = 3 + Math.random() * 2;
+                    this.speed = 2 + Math.random() * 3;
+                    this.angle = Math.random() * 2 * Math.PI;
+                    this.vx = Math.cos(this.angle) * this.speed;
+                    this.vy = Math.sin(this.angle) * this.speed;
+                    this.gravity = 0.03;
+                    this.alpha = 1;
+                    this.decay = 0.015 + Math.random() * 0.015;
+                }
+                update() {
+                    this.vx *= 0.98; // air resistance
+                    this.vy += this.gravity;
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.alpha -= this.decay;
+                    this.alpha = this.alpha < 0 ? 0 : this.alpha;
+                }
+                draw(ctx) {
+                    ctx.save();
+                    ctx.globalAlpha = this.alpha;
+                    ctx.beginPath();
+                    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius*3);
+                    gradient.addColorStop(0, this.color);
+                    gradient.addColorStop(1, 'transparent');
+                    ctx.fillStyle = gradient;
+                    ctx.arc(this.x, this.y, this.radius*3, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.restore();
+                }
+                isDead() {
+                    return this.alpha <= 0;
+                }
+            }
+
+            const fireworks = [];
+
+            function createFirework(x, y) {
+                const colors = [
+                    '#ff416c',
+                    '#ff4b1f',
+                    '#ff9500',
+                    '#ffe000',
+                    '#aaff00',
+                    '#00ffd5',
+                    '#0085ff',
+                    '#a200ff',
+                    '#ff00ff'
+                ];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                for (let i = 0; i < 30; i++) {
+                    fireworks.push(new Particle(x, y, color));
+                }
+            }
+
+            function animated() {
+                ctx.clearRect(0, 0, cw, ch);
+                for(let i = fireworks.length - 1; i >= 0; i--) {
+                    const p = fireworks[i];
+                    p.update();
+                    p.draw(ctx);
+                    if(p.isDead()) {
+                        fireworks.splice(i, 1);
+                    }
+                }
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+
+            // Interaction
+            function onClick(e) {
+                let rect = canvas.getBoundingClientRect();
+                let x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+                let y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+                createFirework(x, y);
+            }
+
+            //support touch and click
+
+            document.getElementById('container').addEventListener('click', onClick);
+
+            document.getElementById('container').addEventListener('touchstart', onClick);
+        })();
+    </script>
+</body>
+</html>
